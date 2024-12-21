@@ -1,6 +1,7 @@
 import * as monaco from 'https://cdn.jsdelivr.net/npm/monaco-editor@0.50.0/+esm';
 import { parse } from './parser/gramatica.js';
 import { ErrorReglas } from './parser/error.js';
+import Tokenizer from './visitor/tokenizer.js';
 
 
 export let ids = []
@@ -51,6 +52,13 @@ const analizar = () => {
         // salida.setValue("Análisis Exitoso");
         // Limpiar decoraciones previas si la validación es exitosa
         decorations = editor.deltaDecorations(decorations, []);
+        const tokenizer = new Tokenizer();
+        const fileContents= tokenizer.generateTokenizer(cst);
+        const blob = new Blob([fileContents],{type:'text/plain'})
+        const url= URL.createObjectURL(blob);
+        const descarga=document.getElementById('BotonDescarga')
+
+        descarga.href=url;
     } catch (e) {
 
         if(e.location === undefined){
