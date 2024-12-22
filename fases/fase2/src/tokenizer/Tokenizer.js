@@ -2,25 +2,58 @@ import Visitor from '../visitor/Visitor.js';
 import { Rango } from '../visitor/CST.js';
 import { generateCaracteres } from './utils.js';
 
+/**
+ * Clase Tokenizer que extiende la funcionalidad de Visitor
+ */
 export default class Tokenizer extends Visitor {
+
+    /**
+     * @override
+     * @param {any} node - Nodo de producciones a visitar.
+     * @returns {any}
+     */
     visitProducciones(node) {
         return node.expr.accept(this);
     }
+
+    /**
+     * @override
+     * @param {any} node - Nodo de opciones a visitar.
+     * @returns {string}
+     */
     visitOpciones(node) {
         return node.exprs
             .map((expr) => expr.accept(this))
             .filter((str) => str)
             .join('\n');
     }
+
+    /**
+     * @override
+     * @param {any} node - Nodo de uniones a visitar.
+     * @returns {string}
+     */
     visitUnion(node) {
         return node.exprs
             .map((expr) => expr.accept(this))
             .filter((str) => str)
             .join('\n');
     }
+
+    /**
+     * @override
+     * @param {any} node - Nodo de expresiones a visitar.
+     * @returns {any}
+     */
     visitExpresion(node) {
         return node.expr.accept(this);
     }
+
+    /**
+     * @override
+     * @param {any} node - Nodo de tipo string a visitar.
+     * @returns {string}
+     */
     visitString(node) {
         return `
     if ("${node.val}" == input(cursor:cursor + ${node.val.length - 1})) then
@@ -31,6 +64,12 @@ export default class Tokenizer extends Visitor {
     end if
     `;
     }
+
+    /**
+     * @override
+     * @param {any} node - Nodo de clases a visitar.
+     * @returns {string}
+     */
     visitClase(node) {
         return `
     i = cursor
@@ -41,6 +80,12 @@ export default class Tokenizer extends Visitor {
         .join('\n')}
         `;
     }
+
+    /**
+     * @override
+     * @param {any} node - Nodo de rangos a visitar.
+     * @returns {string}
+     */
     visitRango(node) {
         return `
     if (input(i:i) >= "${node.bottom}" .and. input(i:i) <= "${node.top}") then
@@ -50,12 +95,30 @@ export default class Tokenizer extends Visitor {
     end if
         `;
     }
+
+    /**
+     * @override
+     * @param {any} node - Nodo de identificadores a visitar.
+     * @returns {string}
+     */
     visitIdentificador(node) {
         return '';
     }
+
+    /**
+     * @override
+     * @param {any} node - Nodo de puntos a visitar.
+     * @returns {string}
+     */
     visitPunto(node) {
         return '';
     }
+
+    /**
+     * @override
+     * @param {any} node - Nodo de fin a visitar.
+     * @returns {string}
+     */
     visitFin(node) {
         return '';
     }

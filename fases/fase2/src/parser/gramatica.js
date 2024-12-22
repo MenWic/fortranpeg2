@@ -10,7 +10,7 @@
     // import { identificadores } from '../index.js'
 
     import { ids, usos} from '../index.js'
-    import { ErrorReglas } from './error.js';
+    import { ErrorReglas } from './error.js'
     import { errores } from '../index.js'
 
     import * as n from '../visitor/CST.js';
