@@ -3,8 +3,8 @@ import Tokenizer from './Tokenizer.js';
 export async function generateTokenizer(grammar) {
     const tokenizer = new Tokenizer();
     return `
-module tokenizer
-  implicit none
+module parser
+implicit none
 
 contains
 
@@ -18,6 +18,7 @@ subroutine parse(input)
         print *, lexeme
     end do
 end subroutine parse
+
 
   function nextSym(input, cursor) result(lexeme)
     character(len=*), intent(in) :: input
@@ -53,7 +54,7 @@ end subroutine parse
     end do
   end function lower
 
-end module tokenizer
+end module parser
     `;
 }
 
