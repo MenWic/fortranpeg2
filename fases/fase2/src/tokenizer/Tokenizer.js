@@ -47,20 +47,23 @@ export default class Tokenizer extends Visitor {
      */
     visitExpresion(node) {
         let baseExpr = node.expr.accept(this);
-        
-        // Si no hay cuantificador, retornamos la expresión base
-        if (!node.qty) return baseExpr;
+
+        console.log(node.expr);
+        console.log(node.qty);
+
+        if (!node.qty)  return this.generateOneorNone(baseExpr);
 
         // Modificamos la expresión según el cuantificador
-        switch(node.qty) {
-            case '*':
-                return this.generateZeroOrMore(baseExpr);
-            case '+':
-                return this.generateOneOrMore(baseExpr);
-            default:
-                return baseExpr;
+        if (node.qty === '*'){
+            return this.generateZeroOrMore(baseExpr);
+        } else if (node.qty === '+'){
+            node.isUnique = '';
+            return this.generateOneOrMore(baseExpr);
+        } else {
+            return this.generateOneorNone(baseExpr);
         }
-    }   
+
+    }
 
     /**
      * @override
@@ -108,8 +111,6 @@ export default class Tokenizer extends Visitor {
     if (input(i:i) >= "${node.bottom}" .and. input(i:i) <= "${node.top}") then
         lexeme = input(cursor:i)
         cursor = i + 1
-        return
-    end if
         `;
     }
 
@@ -140,10 +141,6 @@ export default class Tokenizer extends Visitor {
         return '';
     }
 
-
-
-
-
      /**
      * Genera código para el cuantificador * (cero o más ocurrencias)
      * @param {string} baseExpr - Expresión base a cuantificar
@@ -155,6 +152,7 @@ export default class Tokenizer extends Visitor {
     do while (.true.)
         temp_cursor = cursor
         ${baseExpr}
+        endif
         if (temp_cursor == cursor) exit
     end do
     if (cursor > start_pos) then
@@ -176,6 +174,7 @@ export default class Tokenizer extends Visitor {
     do while (.true.)
         temp_cursor = cursor
         ${baseExpr}
+        end if
         if (temp_cursor == cursor) exit
         found_one = .true.
     end do
@@ -184,5 +183,12 @@ export default class Tokenizer extends Visitor {
         return
     end if
         `;
+    }
+
+    generateOneorNone(baseExpr) {
+        return `       
+         ${baseExpr}
+        return
+        end if`
     }
 }
