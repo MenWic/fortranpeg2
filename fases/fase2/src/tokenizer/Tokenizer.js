@@ -6,7 +6,6 @@ import { generateCaracteres } from './utils.js';
  * Clase Tokenizer que extiende la funcionalidad de Visitor
  */
 export default class Tokenizer extends Visitor {
-
     /**
      * @override
      * @param {any} node - Nodo de producciones a visitar.
