@@ -46,8 +46,21 @@ export default class Tokenizer extends Visitor {
      * @returns {any}
      */
     visitExpresion(node) {
-        return node.expr.accept(this);
-    }
+        let baseExpr = node.expr.accept(this);
+        
+        // Si no hay cuantificador, retornamos la expresión base
+        if (!node.qty) return baseExpr;
+
+        // Modificamos la expresión según el cuantificador
+        switch(node.qty) {
+            case '*':
+                return this.generateZeroOrMore(baseExpr);
+            case '+':
+                return this.generateOneOrMore(baseExpr);
+            default:
+                return baseExpr;
+        }
+    }   
 
     /**
      * @override
@@ -55,14 +68,18 @@ export default class Tokenizer extends Visitor {
      * @returns {string}
      */
     visitString(node) {
+        const comparison = node.isCase ? 
+            `lower(input(cursor:cursor + ${node.val.length - 1})) == lower("${node.val}")` :
+            `"${node.val}" == input(cursor:cursor + ${node.val.length - 1})`;
+            
         return `
-    if ("${node.val}" == input(cursor:cursor + ${node.val.length - 1})) then
-        allocate( character(len=${node.val.length}) :: lexeme)
+    if (${comparison}) then
+        allocate(character(len=${node.val.length}) :: lexeme)
         lexeme = input(cursor:cursor + ${node.val.length - 1})
         cursor = cursor + ${node.val.length}
         return
     end if
-    `;
+        `;
     }
 
     /**
@@ -121,5 +138,51 @@ export default class Tokenizer extends Visitor {
      */
     visitFin(node) {
         return '';
+    }
+
+
+
+
+
+     /**
+     * Genera código para el cuantificador * (cero o más ocurrencias)
+     * @param {string} baseExpr - Expresión base a cuantificar
+     * @returns {string}
+     */
+     generateZeroOrMore(baseExpr) {
+        return `
+    start_pos = cursor
+    do while (.true.)
+        temp_cursor = cursor
+        ${baseExpr}
+        if (temp_cursor == cursor) exit
+    end do
+    if (cursor > start_pos) then
+        lexeme = input(start_pos:cursor-1)
+        return
+    end if
+        `;
+    }
+
+    /**
+     * Genera código para el cuantificador + (una o más ocurrencias)
+     * @param {string} baseExpr - Expresión base a cuantificar
+     * @returns {string}
+     */
+    generateOneOrMore(baseExpr) {
+        return `
+    start_pos = cursor
+    found_one = .false.
+    do while (.true.)
+        temp_cursor = cursor
+        ${baseExpr}
+        if (temp_cursor == cursor) exit
+        found_one = .true.
+    end do
+    if (found_one) then
+        lexeme = input(start_pos:cursor-1)
+        return
+    end if
+        `;
     }
 }

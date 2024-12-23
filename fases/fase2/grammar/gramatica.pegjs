@@ -1,9 +1,6 @@
 {{
-    
     // let identificadores = []
-
     // import { identificadores } from '../index.js'
-
     import { ids, usos} from '../index.js'
     import { ErrorReglas } from './error.js';
     import { errores } from '../index.js'
@@ -60,6 +57,8 @@ expresiones
     return new n.String(val.replace(/['"]/g, ''), isCase);
   }
   / "(" _ @opciones _ ")"
+
+
   / chars:clase isCase:"i"? {
     return new n.Clase(chars, isCase);
   }

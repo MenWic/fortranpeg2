@@ -33,6 +33,7 @@ const analizar = () => {
     errores.length = 0;
     try {
         cst = parse(entrada);
+        console.log("CST: ", cst);
 
         if (errores.length > 0) {
             salida.setValue(`Error: ${errores[0].message}`);
