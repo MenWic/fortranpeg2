@@ -1,5 +1,5 @@
 import Visitor from '../visitor/Visitor.js';
-import { Rango } from '../visitor/CST.js';
+import { Rango, String } from '../visitor/CST.js';
 import { generateCaracteres } from './utils.js';
 
 /**
@@ -46,22 +46,13 @@ export default class Tokenizer extends Visitor {
      * @returns {any}
      */
     visitExpresion(node) {
-        let baseExpr = node.expr.accept(this);
 
         console.log(node.expr);
-        console.log(node.qty);
 
-        if (!node.qty)  return this.generateOneorNone(baseExpr);
+            node.expr.qty = node.qty
 
-        // Modificamos la expresión según el cuantificador
-        if (node.qty === '*'){
-            return this.generateZeroOrMore(baseExpr);
-        } else if (node.qty === '+'){
-            node.isUnique = '';
-            return this.generateOneOrMore(baseExpr);
-        } else {
-            return this.generateOneorNone(baseExpr);
-        }
+        return node.expr.accept(this);
+
 
     }
 
@@ -71,18 +62,59 @@ export default class Tokenizer extends Visitor {
      * @returns {string}
      */
     visitString(node) {
-        const comparison = node.isCase ? 
-            `lower(input(cursor:cursor + ${node.val.length - 1})) == lower("${node.val}")` :
-            `"${node.val}" == input(cursor:cursor + ${node.val.length - 1})`;
-            
-        return `
+        const comparison = node.isCase ?
+          `lower(input(cursor:cursor + ${node.val.length - 1})) == lower("${node.val}")` :
+          `"${node.val}" == input(cursor:cursor + ${node.val.length - 1})`;
+        const base = `
     if (${comparison}) then
-        allocate(character(len=${node.val.length}) :: lexeme)
-        lexeme = input(cursor:cursor + ${node.val.length - 1})
+        
+        `
+        if (node.qty === '*'){
+            return `
+    start_pos = cursor
+    do while (.true.)
+        temp_cursor = cursor
+        !allocate(character(len=${node.val.length}) :: stringLexeme)
+        ${base}
+        !stringLexeme = input(cursor:cursor + ${node.val.length - 1})
         cursor = cursor + ${node.val.length}
+        endif
+        if (temp_cursor == cursor) exit
+    end do
+    if (cursor > start_pos) then
+        lexeme = input(start_pos:cursor-1)
         return
     end if
-        `;
+        `
+        } else if (node.qty === '+'){
+        return `
+    start_pos = cursor
+    found_one = .false.
+    do while (.true.)
+        temp_cursor = cursor
+        !allocate(character(len=${node.val.length}) :: stringLexeme)
+        ${base}
+        !stringLexeme = input(cursor:cursor + ${node.val.length - 1})
+        cursor = cursor + ${node.val.length}
+        end if
+        if (temp_cursor == cursor) exit
+        found_one = .true.
+    end do
+    if (found_one) then
+        lexeme = input(start_pos:cursor-1)
+        return
+    end if
+        `
+        } else {
+            return `
+            ${base}
+            allocate(character(len=${node.val.length}) :: lexeme)
+        lexeme = input(cursor:cursor + ${node.val.length - 1})
+        cursor = cursor + ${node.val.length}
+            return
+            endif
+            `
+        }
     }
 
     /**
@@ -107,11 +139,48 @@ export default class Tokenizer extends Visitor {
      * @returns {string}
      */
     visitRango(node) {
-        return `
+        const base = `
     if (input(i:i) >= "${node.bottom}" .and. input(i:i) <= "${node.top}") then
         lexeme = input(cursor:i)
         cursor = i + 1
         `;
+        if (node.qty === '*'){
+            return`
+    start_pos = cursor
+    do while (.true.)
+        temp_cursor = cursor
+        ${base}
+        endif
+        if (temp_cursor == cursor) exit
+    end do
+    if (cursor > start_pos) then
+        lexeme = input(start_pos:cursor-1)
+        return
+    end if
+        `
+        } else if (node.qty === '+'){
+            return `
+    start_pos = cursor
+    found_one = .false.
+    do while (.true.)
+        temp_cursor = cursor
+        ${base}
+        end if
+        if (temp_cursor == cursor) exit
+        found_one = .true.
+    end do
+    if (found_one) then
+        lexeme = input(start_pos:cursor-1)
+        return
+    end if
+        `
+        } else {
+            return `
+            ${base}
+            return
+            endif
+            `
+        }
     }
 
     /**
