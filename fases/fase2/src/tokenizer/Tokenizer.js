@@ -13,7 +13,14 @@ export default class Tokenizer extends Visitor {
      * @returns {any}
      */
     visitProducciones(node) {
-        return node.expr.accept(this);
+
+        if (node.alias === undefined){
+            node.alias = ''
+        } else {
+            node.expr.alias = node.alias;
+        }
+
+        return node.expr.accept(this,node.alias);
     }
 
     /**
@@ -22,6 +29,11 @@ export default class Tokenizer extends Visitor {
      * @returns {string}
      */
     visitOpciones(node) {
+
+        for (let child of node.exprs){
+            child.alias = node.alias;
+        }
+
         return node.exprs
             .map((expr) => expr.accept(this))
             .filter((str) => str)
@@ -34,6 +46,10 @@ export default class Tokenizer extends Visitor {
      * @returns {string}
      */
     visitUnion(node) {
+
+        for (let child of node.exprs){
+            child.alias = node.alias;
+        }
         return node.exprs
             .map((expr) => expr.accept(this))
             .filter((str) => str)
@@ -47,7 +63,7 @@ export default class Tokenizer extends Visitor {
      */
     visitExpresion(node) {
 
-        console.log(node.expr);
+        node.expr.alias = node.alias;
 
             node.expr.qty = node.qty
 
@@ -62,6 +78,8 @@ export default class Tokenizer extends Visitor {
      * @returns {string}
      */
     visitString(node) {
+        console.log(node.alias);
+        const aliaString = this.leerAlias(node.alias);
         const comparison = node.isCase ?
           `lower(input(cursor:cursor + ${node.val.length - 1})) == lower("${node.val}")` :
           `"${node.val}" == input(cursor:cursor + ${node.val.length - 1})`;
@@ -82,7 +100,7 @@ export default class Tokenizer extends Visitor {
         if (temp_cursor == cursor) exit
     end do
     if (cursor > start_pos) then
-        lexeme = input(start_pos:cursor-1)
+        lexeme = input(start_pos:cursor-1) ${ aliaString ? `// " - ${aliaString}"` : ''}  
         return
     end if
         `
@@ -101,7 +119,7 @@ export default class Tokenizer extends Visitor {
         found_one = .true.
     end do
     if (found_one) then
-        lexeme = input(start_pos:cursor-1)
+        lexeme = input(start_pos:cursor-1) ${ aliaString ? `// " - ${aliaString}"` : ''}  
         return
     end if
         `
@@ -109,7 +127,7 @@ export default class Tokenizer extends Visitor {
             return `
             ${base}
             allocate(character(len=${node.val.length}) :: lexeme)
-        lexeme = input(cursor:cursor + ${node.val.length - 1})
+        lexeme = input(cursor:cursor + ${node.val.length - 1}) ${ aliaString ? `// " - ${aliaString}"` : ''}  
         cursor = cursor + ${node.val.length}
             return
             endif
@@ -208,6 +226,19 @@ export default class Tokenizer extends Visitor {
      */
     visitFin(node) {
         return '';
+    }
+
+    leerAlias(aliasArray){
+        let alias = "";
+        if (!aliasArray){
+            return null;
+        }
+
+        for (let i = 0; i < aliasArray.length; i++) {
+            alias += aliasArray[i][1].toString();
+        }
+        console.log(alias)
+        return alias;
     }
 
      /**

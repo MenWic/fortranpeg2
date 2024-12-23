@@ -44,9 +44,11 @@ export class Opciones {
     /**
      *
      * @param {Union[]} exprs
+     * @param {string=} alias
      */
-    constructor(exprs) {
+    constructor(exprs, alias) {
         this.exprs = exprs;
+        this.alias = alias;
     }
 
     /**
@@ -55,8 +57,7 @@ export class Opciones {
      * @returns {T}
      */
     accept(visitor) {
-        return visitor.visitOpciones(this);
-    }
+return visitor.visitOpciones(this);    }
 }
     
 
@@ -67,9 +68,11 @@ export class Union {
     /**
      *
      * @param {Expresion[]} exprs
+     * @param {string=} alias
      */
-    constructor(exprs) {
+    constructor(exprs,alias) {
         this.exprs = exprs;
+        this.alias = alias;
     }
 
     /**
@@ -92,11 +95,13 @@ export class Expresion {
      * @param {Node} expr
 	 * @param {string=} label
 	 * @param {string=} qty
+     * @param {string=} alias
      */
-    constructor(expr, label, qty) {
+    constructor(expr, label, qty,alias) {
         this.expr = expr;
 		this.label = label;
 		this.qty = qty;
+        this.alias = alias;
     }
 
     /**
@@ -118,18 +123,24 @@ export class String {
      *
      * @param {string} val
 	 * @param {boolean=} isCase
+     * @param {string=} qty
+     * @param {string=} alias
+     *
      */
-    constructor(val, isCase) {
+    constructor(val, isCase,qty, alias) {
         this.val = val;
 		this.isCase = isCase;
+        this.qty = qty;
+        this.alias = alias;
     }
 
     /**
      * @template T
      * @param {Visitor<T>} visitor
+     * @param {string=} alias
      * @returns {T}
      */
-    accept(visitor) {
+    accept(visitor, alias) {
         return visitor.visitString(this);
     }
 }
@@ -172,6 +183,7 @@ export class Rango {
     constructor(bottom, top) {
         this.bottom = bottom;
 		this.top = top;
+        this.isUnique = '';
     }
 
     /**
