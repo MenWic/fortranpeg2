@@ -126,10 +126,10 @@ escape = "'"
 
 secuenciaFinLinea = "\r\n" / "\n" / "\r" / "\u2028" / "\u2029"
 
-// literales = 
+// literales =
 //     "\"" [^"]* "\""
 //     / "'" [^']* "'"
-    
+
 numero = [0-9]+
 
 identificador = [_a-z]i[_a-z0-9]i* { return text() }
