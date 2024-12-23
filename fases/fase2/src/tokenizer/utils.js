@@ -8,22 +8,16 @@ module tokenizer
 
 contains
 
-  subroutine parse(input)
-    character(len=*), intent(in) :: input
-    integer :: cursor = 1
+subroutine parse(input)
+    character(len=:), intent(inout), allocatable :: input
     character(len=:), allocatable :: lexeme
-
-    print *, "Iniciando el analisis lexico..."
-    
-    do while (cursor <= len(input))
-        lexeme = nextSym(input, cursor)  ! Llamada corregida, solo pasa input y cursor
-        print *, "Lexeme: ", lexeme
-        if (lexeme == "EOF") exit
-        cursor = cursor + len(lexeme)
+    integer :: cursor
+    cursor = 1
+    do while (lexeme /= "EOF" .and. lexeme /= "ERROR")
+        lexeme = nextSym(input, cursor)
+        print *, lexeme
     end do
-
-    print *, "Lexical analysis completed."
-  end subroutine parse
+end subroutine parse
 
   function nextSym(input, cursor) result(lexeme)
     character(len=*), intent(in) :: input

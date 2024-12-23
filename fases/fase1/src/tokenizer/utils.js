@@ -3,10 +3,22 @@ import Tokenizer from './Tokenizer.js';
 export async function generateTokenizer(grammar) {
     const tokenizer = new Tokenizer();
     return `
-module tokenizer
+module parser
 implicit none
 
 contains
+
+subroutine parse(input)
+    character(len=:), intent(inout), allocatable :: input
+    character(len=:), allocatable :: lexeme
+    integer :: cursor
+    cursor = 1
+    do while (lexeme /= "EOF" .and. lexeme /= "ERROR")
+        lexeme = nextSym(input, cursor)
+        print *, lexeme
+    end do
+end subroutine parse
+
 function nextSym(input, cursor) result(lexeme)
     character(len=*), intent(in) :: input
     integer, intent(inout) :: cursor
@@ -24,7 +36,7 @@ function nextSym(input, cursor) result(lexeme)
     print *, "error lexico en col ", cursor, ', "'//input(cursor:cursor)//'"'
     lexeme = "ERROR"
 end function nextSym
-end module tokenizer 
+end module parser 
     `;
 }
 
